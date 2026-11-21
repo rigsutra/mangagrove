@@ -7,5 +7,5 @@ models/
 .DS_Store
 .claude/
 # copyrighted page images and translations: keep out of git
-site/public/series/
+site/public/series/soul-land/
 tr/
