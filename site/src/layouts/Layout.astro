@@ -1,7 +1,8 @@
 ---
 import { u } from '../lib/url';
 const { title = 'Hinglish Manga Reader', active = '', description = 'Read manga, manhwa and manhua translated to Hinglish.', image = '', type = 'website', jsonLd = null, alternates = [] } = Astro.props;
-const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : '';
+const noindex = !!import.meta.env.PUBLIC_NOINDEX;
+const canonical = Astro.site && !noindex ? new URL(Astro.url.pathname, Astro.site).href : '';
 const og = image && Astro.site ? new URL(image, Astro.site).href : '';
 ---
 <!doctype html>
@@ -11,6 +12,7 @@ const og = image && Astro.site ? new URL(image, Astro.site).href : '';
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{title}</title>
   <meta name="description" content={description} />
+  {noindex && <meta name="robots" content="noindex, nofollow" />}
   {canonical && <link rel="canonical" href={canonical} />}
   <meta property="og:type" content={type} />
   <meta property="og:title" content={title} />
