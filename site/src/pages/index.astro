@@ -1,0 +1,85 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { allSeries, cover, latest, u } from '../lib/url';
+const featured = allSeries[0];
+---
+<Layout title="Hinglish Scans - Read Manga, Manhwa & Manhua in Hinglish" active="home">
+  <section class="hero">
+    <div class="hero-bg" style={`background-image:url(${cover(featured)})`}></div>
+    <div class="hero-body">
+      <img class="hero-cover" src={cover(featured)} alt={featured.title} />
+      <div>
+        <span class="chip">Featured</span>
+        <h1>{featured.title}</h1>
+        <p class="syn">{featured.synopsis}</p>
+        <p>{featured.genres.map((g) => <span class="chip">{g}</span>)}</p>
+        <a class="btn" href={u(`/series/${featured.slug}/${latest(featured).at(-1)?.n}`)}>Start reading</a>
+        <a class="btn ghost" href={u(`/series/${featured.slug}`)}>Details</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="card">
+      <h2>Trending Comics</h2>
+      <div class="grid">
+        {allSeries.map((s) => (
+          <a class="tile" href={u(`/series/${s.slug}`)}>
+            <div class="img"><img src={cover(s)} alt={s.title} loading="lazy" /></div>
+            <div class="t">{s.title}</div>
+            <div class="s">Chapter {latest(s)[0].n}</div>
+          </a>
+        ))}
+      </div>
+    </section>
+    <aside class="card">
+      <h2>Popular</h2>
+      <ol class="pop">
+        {allSeries.map((s, i) => (
+          <li><a href={u(`/series/${s.slug}`)}><b>{i + 1}</b><img src={cover(s)} alt="" /><span><span class="pt">{s.title}</span><span class="ps">{s.genres.join(', ')}</span></span></a></li>
+        ))}
+      </ol>
+    </aside>
+  </div>
+
+  <section class="card" style="margin-top:18px">
+    <h2>Latest Updates</h2>
+    <div class="updates">
+      {allSeries.map((s) => (
+        <div class="upd">
+          <a href={u(`/series/${s.slug}`)}><img src={cover(s)} alt={s.title} loading="lazy" /></a>
+          <div>
+            <a class="ut" href={u(`/series/${s.slug}`)}>{s.title}</a>
+            <ul>
+              {latest(s).slice(0, 3).map((c) => (
+                <li><a href={u(`/series/${s.slug}/${c.n}`)}>Chapter {c.n}{c.title ? ` - ${c.title}` : ''}</a><time>{c.date}</time></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+</Layout>
+<style>
+  .hero { position:relative; border-radius:20px; overflow:hidden; border:1px solid var(--line); margin-bottom:18px; }
+  .hero-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(28px) brightness(.35); transform:scale(1.2); }
+  .hero-body { position:relative; display:flex; gap:28px; padding:28px; align-items:center; }
+  .hero-cover { width:200px; border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.6); }
+  h1 { margin:10px 0 8px; font-size:34px; line-height:1.15; }
+  .syn { color:#d6d0ec; max-width:60ch; }
+  .btn.ghost { background:transparent; border:1px solid var(--line); margin-left:8px; }
+  .cols { display:grid; grid-template-columns:1fr 320px; gap:18px; }
+  .pop { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+  .pop a { display:flex; gap:12px; align-items:center; }
+  .pop b { color:var(--accent2); width:14px; }
+  .pop img { width:44px; height:58px; object-fit:cover; border-radius:8px; }
+  .pt { display:block; font-weight:600; font-size:14px; } .ps { display:block; color:var(--mute); font-size:12px; }
+  .updates { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
+  .upd { display:flex; gap:14px; background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:12px; }
+  .upd img { width:84px; height:112px; object-fit:cover; border-radius:10px; }
+  .ut { font-weight:700; } .upd ul { list-style:none; padding:0; margin:8px 0 0; display:grid; gap:6px; }
+  .upd li { display:flex; justify-content:space-between; gap:10px; font-size:13.5px; background:var(--panel); border-radius:8px; padding:6px 10px; }
+  .upd li:hover { background:#261f40; } time { color:var(--mute); font-size:12px; }
+  @media (max-width:900px){ .cols{grid-template-columns:1fr;} .hero-body{flex-direction:column; text-align:center;} .hero-cover{width:150px;} }
+</style>

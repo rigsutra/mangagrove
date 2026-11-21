@@ -1,0 +1,37 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { allSeries, u } from '../../../lib/url';
+export function getStaticPaths() {
+  return allSeries.flatMap((s) => s.chapters.map((c) => ({ params: { slug: s.slug, chapter: String(c.n) }, props: { s, c } })));
+}
+const { s, c } = Astro.props;
+const sorted = [...s.chapters].sort((a, b) => a.n - b.n);
+const i = sorted.findIndex((x) => x.n === c.n);
+const prev = sorted[i - 1], next = sorted[i + 1];
+const pages = Array.from({ length: c.pages }, (_, k) => u(`/series/${s.slug}/ch-${c.n}/${String(k).padStart(2, '0')}.webp`));
+---
+<Layout title={`${s.title} Chapter ${c.n} - Hinglish | Hinglish Scans`} description={`Read ${s.title} Chapter ${c.n}${c.title ? ' - ' + c.title : ''} online in Hinglish.`}>
+  <div class="nav">
+    <a href={u(`/series/${s.slug}`)}>← {s.title}</a>
+    <strong>Chapter {c.n}{c.title ? ` - ${c.title}` : ''}</strong>
+    <span>
+      {prev ? <a class="btn sm" href={u(`/series/${s.slug}/${prev.n}`)}>Prev</a> : <span class="btn sm off">Prev</span>}
+      {next ? <a class="btn sm" href={u(`/series/${s.slug}/${next.n}`)}>Next</a> : <span class="btn sm off">Next</span>}
+    </span>
+  </div>
+  <div class="pages">
+    {pages.map((src, k) => <img src={src} alt={`Page ${k + 1}`} loading={k < 2 ? 'eager' : 'lazy'} />)}
+  </div>
+  <div class="nav bottom">
+    {prev ? <a class="btn" href={u(`/series/${s.slug}/${prev.n}`)}>← Previous chapter</a> : <span />}
+    {next ? <a class="btn" href={u(`/series/${s.slug}/${next.n}`)}>Next chapter →</a> : <a class="btn" href={u(`/series/${s.slug}`)}>Back to series</a>}
+  </div>
+</Layout>
+<style>
+  .nav { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; max-width:900px; margin:0 auto 14px; }
+  .nav a:not(.btn) { color:var(--accent2); }
+  .btn.sm { padding:6px 12px; margin-left:6px; } .btn.off { opacity:.35; }
+  .pages { max-width:900px; margin:0 auto; background:#000; }
+  .pages img { width:100%; height:auto; }
+  .bottom { margin-top:18px; }
+</style>

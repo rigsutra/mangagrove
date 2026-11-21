@@ -1,0 +1,29 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { allSeries, cover, latest, u } from '../lib/url';
+---
+<Layout title="Browse - Hinglish Scans" active="browse">
+  <section class="card">
+    <h2>Browse Comics</h2>
+    <input id="q" class="filter" placeholder="Filter by title or genre..." />
+    <div class="grid" id="list">
+      {allSeries.map((s) => (
+        <a class="tile" data-k={(s.title + ' ' + s.genres.join(' ')).toLowerCase()} href={u(`/series/${s.slug}`)}>
+          <div class="img"><img src={cover(s)} alt={s.title} loading="lazy" /></div>
+          <div class="t">{s.title}</div><div class="s">Chapter {latest(s)[0].n} · {s.status}</div>
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>
+<style>
+  .filter { width:100%; max-width:420px; margin-bottom:16px; background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:10px; }
+</style>
+<script>
+  const q = document.getElementById('q') as HTMLInputElement;
+  const apply = () => document.querySelectorAll<HTMLElement>('#list .tile').forEach((t) => {
+    t.style.display = (t.dataset.k ?? '').includes(q.value.toLowerCase()) ? '' : 'none';
+  });
+  q.value = new URLSearchParams(location.search).get('q') ?? '';
+  q.addEventListener('input', apply); apply();
+</script>

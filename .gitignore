@@ -1,0 +1,11 @@
+.venv/
+raw/
+out/
+__pycache__/
+raw_en/
+models/
+.DS_Store
+.claude/
+# copyrighted page images and translations: keep out of git
+site/public/series/
+tr/
