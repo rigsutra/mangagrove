@@ -5,12 +5,14 @@ export function getStaticPaths() {
   return allSeries.flatMap((s) => s.chapters.map((c) => ({ params: { slug: s.slug, chapter: String(c.n) }, props: { s, c } })));
 }
 const { s, c } = Astro.props;
+const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
+const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicIssue', name: `${s.title} Chapter ${c.n}`, issueNumber: c.n, inLanguage: 'hi-Latn', isPartOf: { '@type': 'ComicSeries', name: s.title, url: abs(u(`/series/${s.slug}`)) } };
 const sorted = [...s.chapters].sort((a, b) => a.n - b.n);
 const i = sorted.findIndex((x) => x.n === c.n);
 const prev = sorted[i - 1], next = sorted[i + 1];
 const pages = Array.from({ length: c.pages }, (_, k) => u(`/series/${s.slug}/ch-${c.n}/${String(k).padStart(2, '0')}.webp`));
 ---
-<Layout title={`${s.title} Chapter ${c.n} - Hinglish | Hinglish Scans`} description={`Read ${s.title} Chapter ${c.n}${c.title ? ' - ' + c.title : ''} online in Hinglish.`}>
+<Layout title={`${s.title} Chapter ${c.n} - Hinglish | Hinglish Scans`} description={`Read ${s.title} Chapter ${c.n}${c.title ? ' - ' + c.title : ''} online in Hinglish.`} jsonLd={jsonLd}>
   <div class="nav">
     <a href={u(`/series/${s.slug}`)}>← {s.title}</a>
     <strong>Chapter {c.n}{c.title ? ` - ${c.title}` : ''}</strong>

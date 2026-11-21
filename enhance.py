@@ -1,6 +1,12 @@
 """AI-upscale pages (Real-ESRGAN anime 6B) -> out/<chapter>/enhanced/<page>.png at OUT_SCALE x original.
 usage: python enhance.py "raw_en/Vol. 1 Ch. 1" [page-glob] """
 import sys, pathlib, os
+def outdir(ch):
+    """out/<chapter> for raw_en/<chapter>, out/<title>/<chapter> for raw_en/<title>/<chapter>"""
+    import pathlib as _p
+    ch=_p.Path(ch); par='' if ch.parent.name in ('raw_en','raw','.','') else ch.parent.name
+    return _p.Path('out')/par/ch.name
+
 import cv2, numpy as np, torch
 from spandrel import ModelLoader
 
@@ -24,7 +30,7 @@ def up4(img, tile=192, pad=16):
 
 if __name__ == "__main__":
     ch = pathlib.Path(sys.argv[1]); pat = sys.argv[2] if len(sys.argv) > 2 else "*.jpg"
-    dest = pathlib.Path("out") / ch.name / "enhanced"; dest.mkdir(parents=True, exist_ok=True)
+    dest = outdir(ch) / "enhanced"; dest.mkdir(parents=True, exist_ok=True)
     for img in sorted(ch.glob(pat)):
         im = cv2.imread(str(img))
         big = up4(im)

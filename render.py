@@ -5,6 +5,12 @@ usage: python render.py "raw_en/Vol. 1 Ch. 1" tr/ch1_hinglish.json [scale]
   -> out/<chapter>/translated/<page>.jpg   (scale 2 = sharpened 2x output)
 """
 import json, sys, pathlib
+def outdir(ch):
+    """out/<chapter> for raw_en/<chapter>, out/<title>/<chapter> for raw_en/<title>/<chapter>"""
+    import pathlib as _p
+    ch=_p.Path(ch); par='' if ch.parent.name in ('raw_en','raw','.','') else ch.parent.name
+    return _p.Path('out')/par/ch.name
+
 import cv2, numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
@@ -53,12 +59,12 @@ def art_erase(im, box):
 if __name__ == "__main__":
     ch, tr = pathlib.Path(sys.argv[1]), json.load(open(sys.argv[2]))
     S = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-    ocr = json.load(open(pathlib.Path("out") / ch.name / "ocr.json"))
-    dest = pathlib.Path("out") / ch.name / "translated"; dest.mkdir(parents=True, exist_ok=True)
+    ocr = json.load(open(outdir(ch) / "ocr.json"))
+    dest = outdir(ch) / "translated"; dest.mkdir(parents=True, exist_ok=True)
     skipped, art = [], []
     for img in sorted(ch.glob("*.jpg")):
         im = cv2.imread(str(img))
-        enh = pathlib.Path("out") / ch.name / "enhanced" / (img.stem + ".png")
+        enh = outdir(ch) / "enhanced" / (img.stem + ".png")
         if enh.exists():  # AI-enhanced page from enhance.py
             S = round(cv2.imread(str(enh)).shape[1] / im.shape[1])
             im = cv2.imread(str(enh))

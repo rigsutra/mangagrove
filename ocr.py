@@ -1,5 +1,11 @@
 """OCR a chapter folder -> out/<chapter>/ocr.json (grouped text blocks with boxes)."""
 import json, sys, os, pathlib
+def outdir(ch):
+    """out/<chapter> for raw_en/<chapter>, out/<title>/<chapter> for raw_en/<title>/<chapter>"""
+    import pathlib as _p
+    ch=_p.Path(ch); par='' if ch.parent.name in ('raw_en','raw','.','') else ch.parent.name
+    return _p.Path('out')/par/ch.name
+
 import cv2, easyocr
 
 def group(dets, gap=int(os.environ.get("OCR_GAP", "22"))):
@@ -43,6 +49,6 @@ if __name__ == "__main__":
             dets = [([[p[0] / S, p[1] / S] for p in d[0]], d[1], d[2]) for d in dets]
         out[img.name] = group(dets)
         print(img.name, len(out[img.name]), flush=True)
-    dest = pathlib.Path("out") / ch.name
+    dest = outdir(ch)
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "ocr.json").write_text(json.dumps(out, ensure_ascii=False, indent=1))

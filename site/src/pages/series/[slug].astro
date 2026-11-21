@@ -3,9 +3,11 @@ import Layout from '../../layouts/Layout.astro';
 import { allSeries, cover, latest, u } from '../../lib/url';
 export function getStaticPaths() { return allSeries.map((s) => ({ params: { slug: s.slug }, props: { s } })); }
 const { s } = Astro.props;
+const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
+const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicSeries', name: s.title, description: s.synopsis, genre: s.genres, inLanguage: 'hi-Latn', image: abs(cover(s)), url: abs(u(`/series/${s.slug}`)), numberOfEpisodes: s.chapters.length };
 const first = [...s.chapters].sort((a, b) => a.n - b.n)[0];
 ---
-<Layout title={`${s.title} - Read Online in Hinglish | Hinglish Scans`} description={s.synopsis} image={cover(s)} type="article">
+<Layout title={`${s.title} - Read Online in Hinglish | Hinglish Scans`} description={s.synopsis} image={cover(s)} type="article" jsonLd={jsonLd}>
   <div class="head card">
     <img src={cover(s)} alt={s.title} />
     <div>
