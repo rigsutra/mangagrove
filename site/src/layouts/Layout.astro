@@ -39,6 +39,7 @@ const ld = [
   {canonical && <link rel="canonical" href={canonical} />}
   <link rel="icon" href={u('/favicon.svg')} type="image/svg+xml" />
   <link rel="icon" href={u('/favicon.ico')} sizes="32x32" />
+  <link rel="apple-touch-icon" href={u('/apple-touch-icon.png')} />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#0d0b14" />
   <meta property="og:site_name" content={SITE_NAME} />
@@ -62,7 +63,7 @@ const ld = [
   <a class="skip" href="#content">Skip to content</a>
   <header class="site-header">
     <div class="bar">
-      <a class="brand" href={u('/')} aria-label={`${SITE_NAME} home`}><span class="logo" aria-hidden="true">MG</span><span>{SITE_NAME}</span></a>
+      <a class="brand" href={u('/')} aria-label={`${SITE_NAME} home`}><img class="logo" src={u('/favicon.svg')} alt="" width="34" height="34" /><span>{SITE_NAME}</span></a>
       <nav aria-label="Main">
         <a href={u('/')} class:list={[active === 'home' && 'on']} aria-current={active === 'home' ? 'page' : undefined}>Home</a>
         <a href={u('/browse/')} class:list={[active === 'browse' && 'on']} aria-current={active === 'browse' ? 'page' : undefined}>Browse</a>
@@ -85,7 +86,7 @@ const ld = [
   <footer class="site-footer">
     <div class="foot">
       <div>
-        <a class="brand" href={u('/')}><span class="logo" aria-hidden="true">MG</span><span>{SITE_NAME}</span></a>
+        <a class="brand" href={u('/')}><img class="logo" src={u('/favicon.svg')} alt="" width="34" height="34" loading="lazy" /><span>{SITE_NAME}</span></a>
         <p>Free webcomics in English and Hindi. Mobile friendly, no pop-ups.</p>
       </div>
       <ul>
@@ -116,6 +117,7 @@ const ld = [
   img { display:block; max-width:100%; height:auto; }
   :focus-visible { outline:2px solid var(--accent2); outline-offset:2px; border-radius:4px; }
   ::selection { background:var(--accent); color:var(--accent-ink); }
+  [hidden] { display:none !important; }
 
   .skip { position:absolute; left:12px; top:-60px; z-index:100; padding:10px 14px; border-radius:var(--r-sm); background:var(--accent); color:var(--accent-ink); font-weight:600; }
   .skip:focus { top:12px; }
@@ -124,7 +126,7 @@ const ld = [
   .site-header { position:sticky; top:0; z-index:40; background:rgba(13,11,20,.82); backdrop-filter:saturate(1.4) blur(12px); -webkit-backdrop-filter:saturate(1.4) blur(12px); border-bottom:1px solid var(--line); }
   .bar { max-width:var(--wrap); margin:0 auto; padding:10px var(--gutter); display:flex; align-items:center; gap:20px; }
   .brand { display:inline-flex; align-items:center; gap:10px; font-weight:750; font-size:16px; white-space:nowrap; }
-  .logo { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#d08cff); display:grid; place-items:center; font-weight:800; font-size:13px; color:#fff; box-shadow:0 4px 14px rgba(139,92,246,.35); }
+  .logo { width:34px; height:34px; flex:none; border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,.4); }
   .site-header nav { display:flex; gap:4px; }
   .site-header nav a { padding:8px 12px; border-radius:var(--r-sm); color:var(--mute); font-weight:550; transition:color .15s, background .15s; }
   .site-header nav a:hover { color:var(--text); background:var(--panel2); }

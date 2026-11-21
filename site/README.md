@@ -1,43 +1,33 @@
-# Astro Starter Kit: Minimal
+# MangaGrove site
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Static Astro reader for [MangaGrove](https://mangagrove.ashishsingh92003.workers.dev): free webcomics in English and Hindi.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Source: https://github.com/rigsutra/mangagrove
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+## Layout
 
 ```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+public/series/<slug>/          cover.webp and page images (<lang>/ch-<n>/NN.webp)
+src/data/series.json           series + chapter metadata (built by ../scripts/build_site_data.py)
+src/lib/url.ts                 URL helpers, site name, language labels
+src/layouts/Layout.astro       shared head (SEO, Open Graph, JSON-LD), header, footer, global CSS
+src/pages/                     home, browse, series detail, chapter reader, 404
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Commands
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Run from `site/`:
 
-Any static assets, like images, can be placed in the `public/` directory.
+| Command           | Action                                  |
+| :---------------- | :-------------------------------------- |
+| `npm install`     | Install dependencies                    |
+| `npm run dev`     | Dev server at `localhost:4321`          |
+| `npm run build`   | Build to `./dist/`                      |
+| `npm run preview` | Preview the build locally               |
 
-## 🧞 Commands
+## Deploy
 
-All commands are run from the root of the project, from a terminal:
+- Primary: Cloudflare Worker `mangagrove` (`mangagrove.ashishsingh92003.workers.dev`), serving `./dist` per `wrangler.jsonc`.
+- Mirror: GitHub Pages via `.github/workflows/deploy.yml` with `SITE_URL=https://rigsutra.github.io`, `SITE_BASE=/mangagrove` and `PUBLIC_NOINDEX=true`, so search engines index only the primary site.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+`SITE_URL` and `SITE_BASE` override the defaults in `astro.config.mjs`.

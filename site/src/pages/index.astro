@@ -1,22 +1,42 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { allSeries, cover, latest, oldest, readUrl, primaryLang, u, LANG_LABEL } from '../lib/url';
+import { allSeries, cover, latest, oldest, readUrl, seriesUrl, primaryLang, u, LANG_LABEL, SITE_NAME } from '../lib/url';
 const featured = allSeries[0];
 const first = oldest(featured)[0];
+const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
+const description = 'Read free webcomics online in English and Hindi on MangaGrove. Fast, mobile friendly reader with no pop-ups.';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: abs(u('/')),
+  description,
+  inLanguage: ['en', 'hi'],
+  potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: abs(u('/browse/')) + '?q={search_term_string}' }, 'query-input': 'required name=search_term_string' },
+};
 ---
-<Layout title="MangaGrove - Read Manga, Manhwa & Webcomics in English and Hindi" description="Read free webcomics online in English and Hindi. Mobile friendly, no pop-ups." image={cover(featured)} active="home">
-  <section class="hero">
+<Layout title={`${SITE_NAME} - Read Manga, Manhwa & Webcomics in English and Hindi`} description={description} image={cover(featured)} imageAlt={`${featured.title} cover`} active="home" jsonLd={jsonLd}>
+  <div class="intro">
+    <h1>Read webcomics free in English &amp; हिन्दी</h1>
+    <p>Hand-picked comics, translated and tuned for reading on your phone. No sign-up, no pop-ups.</p>
+  </div>
+
+  <section class="hero" aria-labelledby="featured-title">
     <div class="hero-bg" style={`background-image:url(${cover(featured)})`}></div>
     <div class="hero-body">
-      <img class="hero-cover" src={cover(featured)} alt={featured.title} width="200" height="280" />
-      <div>
-        <span class="chip">Featured</span>
-        <h1>{featured.title}</h1>
+      <a href={seriesUrl(featured)} class="hero-cover"><img src={cover(featured)} alt={`${featured.title} cover`} width="220" height="308" fetchpriority="high" /></a>
+      <div class="hero-text">
+        <span class="chip solid">Featured</span>
+        <h2 id="featured-title">{featured.title}</h2>
         <p class="syn">{featured.synopsis}</p>
-        <p class="chips">{featured.genres.map((g) => <span class="chip">{g}</span>)}{featured.langs.map((l) => <span class="chip">{LANG_LABEL[l] ?? l}</span>)}</p>
+        <ul class="chips">
+          {featured.genres.map((g) => <li class="chip">{g}</li>)}
+          {featured.langs.map((l) => <li class="chip">{LANG_LABEL[l] ?? l}</li>)}
+          <li class="chip">{featured.chapters.length} chapters</li>
+        </ul>
         <div class="cta">
           <a class="btn" href={readUrl(featured, first.n, primaryLang(first))}>Start reading</a>
-          <a class="btn ghost" href={u(`/series/${featured.slug}`)}>Details</a>
+          <a class="btn ghost" href={seriesUrl(featured)}>All chapters</a>
         </div>
       </div>
     </div>
@@ -27,8 +47,8 @@ const first = oldest(featured)[0];
       <h2>Trending Comics</h2>
       <div class="grid">
         {allSeries.map((s) => (
-          <a class="tile" href={u(`/series/${s.slug}`)}>
-            <div class="img"><img src={cover(s)} alt={s.title} loading="lazy" width="300" height="420" /></div>
+          <a class="tile" href={seriesUrl(s)}>
+            <div class="img"><img src={cover(s)} alt={`${s.title} cover`} loading="lazy" decoding="async" width="300" height="400" /><span class="badge">{s.langs.map((l) => l.toUpperCase()).join(' · ')}</span></div>
             <div class="t">{s.title}</div>
             <div class="s">Chapter {latest(s)[0].n}</div>
           </a>
@@ -39,54 +59,66 @@ const first = oldest(featured)[0];
       <h2>Popular</h2>
       <ol class="pop">
         {allSeries.map((s, i) => (
-          <li><a href={u(`/series/${s.slug}`)}><b>{i + 1}</b><img src={cover(s)} alt="" width="44" height="58" /><span><span class="pt">{s.title}</span><span class="ps">{s.genres.join(', ')}</span></span></a></li>
+          <li><a href={seriesUrl(s)}><b>{i + 1}</b><img src={cover(s)} alt="" loading="lazy" width="44" height="58" /><span><span class="pt">{s.title}</span><span class="ps">{s.genres.join(', ')}</span></span></a></li>
         ))}
       </ol>
     </aside>
   </div>
 
-  <section class="card" style="margin-top:18px">
+  <section class="card latest">
     <h2>Latest Updates</h2>
     <div class="updates">
       {allSeries.map((s) => (
-        <div class="upd">
-          <a href={u(`/series/${s.slug}`)}><img src={cover(s)} alt={s.title} loading="lazy" width="84" height="112" /></a>
-          <div>
-            <a class="ut" href={u(`/series/${s.slug}`)}>{s.title}</a>
+        <article class="upd">
+          <a href={seriesUrl(s)} tabindex="-1" aria-hidden="true"><img src={cover(s)} alt="" loading="lazy" decoding="async" width="84" height="112" /></a>
+          <div class="upd-body">
+            <h3><a class="ut" href={seriesUrl(s)}>{s.title}</a></h3>
             <ul>
               {latest(s).slice(0, 3).map((c) => (
-                <li><a href={readUrl(s, c.n, primaryLang(c))}>Chapter {c.n} - {c.title}</a><time>{c.date}</time></li>
+                <li><a href={readUrl(s, c.n, primaryLang(c))}><span>Ch. {c.n} · {c.title}</span><time datetime={c.date}>{c.date}</time></a></li>
               ))}
             </ul>
           </div>
-        </div>
+        </article>
       ))}
     </div>
   </section>
 </Layout>
 <style>
-  .hero { position:relative; border-radius:20px; overflow:hidden; border:1px solid var(--line); margin-bottom:18px; }
-  .hero-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(28px) brightness(.35); transform:scale(1.2); }
-  .hero-body { position:relative; display:flex; gap:28px; padding:28px; align-items:center; }
-  .hero-cover { width:200px; border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.6); }
-  h1 { margin:10px 0 8px; font-size:34px; line-height:1.15; }
-  .syn { color:#d6d0ec; max-width:60ch; }
-  .chips { display:flex; flex-wrap:wrap; gap:6px; }
-  .cta { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
-  .btn.ghost { background:transparent; border:1px solid var(--line); }
-  .cols { display:grid; grid-template-columns:1fr 320px; gap:18px; }
-  .pop { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
-  .pop a { display:flex; gap:12px; align-items:center; min-height:44px; }
-  .pop b { color:var(--accent2); width:14px; }
-  .pop img { width:44px; height:58px; object-fit:cover; border-radius:8px; }
+  .intro { margin:4px 0 18px; }
+  .intro h1 { margin:0; font-size:clamp(22px,3.2vw,30px); }
+  .intro p { margin:6px 0 0; color:var(--mute); max-width:60ch; }
+
+  .hero { position:relative; border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--line); margin-bottom:18px; isolation:isolate; }
+  .hero-bg { position:absolute; inset:0; z-index:-1; background-size:cover; background-position:center; filter:blur(32px) brightness(.4) saturate(1.2); transform:scale(1.25); }
+  .hero::after { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(13,11,20,.75),rgba(13,11,20,.2)); }
+  .hero-body { display:flex; gap:32px; padding:32px; align-items:center; }
+  .hero-cover { flex:none; border-radius:14px; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.6); transition:transform .25s; }
+  .hero-cover:hover { transform:translateY(-3px); }
+  .hero-cover img { width:220px; }
+  .hero h2 { margin:12px 0 8px; font-size:clamp(26px,4vw,40px); }
+  .syn { color:var(--soft); max-width:62ch; margin:0; }
+  .cta { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; }
+  .pop { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+  .pop a { display:flex; gap:12px; align-items:center; min-height:44px; padding:6px; border-radius:var(--r); transition:background .15s; }
+  .pop a:hover { background:var(--panel2); }
+  .pop b { color:var(--accent2); width:16px; text-align:center; font-size:15px; }
+  .pop img { width:44px; height:58px; object-fit:cover; border-radius:8px; flex:none; }
   .pt { display:block; font-weight:600; font-size:14px; } .ps { display:block; color:var(--mute); font-size:12px; }
-  .updates { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; }
-  .upd { display:flex; gap:14px; background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:12px; }
+
+  .latest { margin-top:18px; }
+  .updates { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr)); gap:14px; }
+  .upd { display:flex; gap:14px; background:var(--panel2); border:1px solid var(--line); border-radius:var(--r); padding:12px; }
   .upd img { width:84px; height:112px; object-fit:cover; border-radius:10px; }
-  .ut { font-weight:700; } .upd ul { list-style:none; padding:0; margin:8px 0 0; display:grid; gap:6px; }
-  .upd li { display:flex; justify-content:space-between; gap:10px; font-size:13.5px; background:var(--panel); border-radius:8px; padding:6px 10px; }
-  .upd li a { min-height:32px; display:flex; align-items:center; flex:1; }
-  time { color:var(--mute); font-size:12px; }
-  @media (max-width:900px){ .cols{grid-template-columns:1fr;} .hero-body{flex-direction:column; text-align:center;} .hero-cover{width:150px;} .chips,.cta{justify-content:center;} }
-  @media (max-width:640px){ h1{font-size:26px;} .hero-body{padding:20px 16px;} .updates{grid-template-columns:1fr;} .upd li{flex-direction:column; gap:2px;} .btn{flex:1;} }
+  .upd-body { flex:1; min-width:0; }
+  .upd h3 { margin:2px 0 0; font-size:15px; } .ut:hover { color:var(--accent2); }
+  .upd ul { list-style:none; padding:0; margin:8px 0 0; display:grid; grid-template-columns:minmax(0,1fr); gap:6px; }
+  .upd li a { display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:36px; padding:6px 10px; font-size:13.5px; background:var(--panel); border:1px solid transparent; border-radius:8px; transition:border-color .15s; }
+  .upd li a:hover { border-color:var(--accent); }
+  .upd li span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  @media (max-width:900px){ .cols{grid-template-columns:1fr;} .hero-body{flex-direction:column; text-align:center; gap:20px;} .hero-cover img{width:160px;} .chips,.cta{justify-content:center;} .syn{margin:0 auto;} .hero::after{background:rgba(13,11,20,.45);} }
+  @media (max-width:640px){ .hero-body{padding:22px 16px;} .cta .btn{flex:1;} }
 </style>

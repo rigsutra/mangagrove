@@ -1,31 +1,52 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { allSeries, cover, latest, oldest, readUrl, primaryLang, u, LANG_LABEL } from '../../lib/url';
+import { allSeries, cover, latest, oldest, readUrl, seriesUrl, primaryLang, LANG_LABEL, SITE_NAME, hreflang } from '../../lib/url';
 export function getStaticPaths() { return allSeries.map((s) => ({ params: { slug: s.slug }, props: { s } })); }
 const { s } = Astro.props;
 const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
 const first = oldest(s)[0];
-const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicSeries', name: s.title, description: s.synopsis, genre: s.genres, inLanguage: s.langs, image: abs(cover(s)), url: abs(u(`/series/${s.slug}`)), numberOfEpisodes: s.chapters.length };
+const newest = latest(s)[0];
+const langNames = s.langs.map((l) => LANG_LABEL[l] ?? l).join(' & ');
+const jsonLd = {
+  '@context': 'https://schema.org', '@type': 'ComicSeries', name: s.title, description: s.synopsis, genre: s.genres, inLanguage: s.langs,
+  image: abs(cover(s)), url: abs(seriesUrl(s)), numberOfEpisodes: s.chapters.length,
+  startDate: first.date, dateModified: newest.date,
+  ...(s.credit ? { creditText: s.credit } : {}),
+  hasPart: oldest(s).map((c) => ({ '@type': 'ComicIssue', name: `${s.title} Chapter ${c.n}: ${c.title}`, issueNumber: c.n, datePublished: c.date, url: abs(readUrl(s, c.n, primaryLang(c))) })),
+};
+const description = `${s.synopsis.split('. ')[0].replace(/\.$/, '')}. Read all ${s.chapters.length} chapters of ${s.title} free online in ${langNames}.`;
 ---
-<Layout title={`${s.title} - Read Online in ${s.langs.map((l) => LANG_LABEL[l] ?? l).join(' & ')} | MangaGrove`} description={s.synopsis} image={cover(s)} type="article" jsonLd={jsonLd}>
+<Layout title={`${s.title} - Read Online in ${langNames} | ${SITE_NAME}`} description={description} image={cover(s)} imageAlt={`${s.title} cover`} type="website" jsonLd={jsonLd} crumbs={[{ name: s.title, href: seriesUrl(s) }]}>
   <div class="head card">
-    <img src={cover(s)} alt={s.title} width="220" height="308" />
-    <div>
+    <div class="head-bg" style={`background-image:url(${cover(s)})`}></div>
+    <img class="cover" src={cover(s)} alt={`${s.title} cover`} width="220" height="308" fetchpriority="high" />
+    <div class="info">
       <h1>{s.title}</h1>
-      <p class="chips"><span class="chip">{s.status}</span>{s.genres.map((g) => <span class="chip">{g}</span>)}</p>
+      <ul class="chips">
+        <li class="chip solid">{s.status}</li>
+        {s.genres.map((g) => <li class="chip">{g}</li>)}
+      </ul>
       <p class="syn">{s.synopsis}</p>
-      <a class="btn" href={readUrl(s, first.n, primaryLang(first))}>Read Chapter {first.n}</a>
+      <dl class="meta">
+        <div><dt>Chapters</dt><dd>{s.chapters.length}</dd></div>
+        <div><dt>Languages</dt><dd>{langNames}</dd></div>
+        <div><dt>Updated</dt><dd><time datetime={newest.date}>{newest.date}</time></dd></div>
+      </dl>
+      <div class="cta">
+        <a class="btn" href={readUrl(s, first.n, primaryLang(first))}>Read Chapter {first.n}</a>
+        {newest.n !== first.n && <a class="btn ghost" href={readUrl(s, newest.n, primaryLang(newest))}>Latest: Ch. {newest.n}</a>}
+      </div>
       {s.credit && <p class="credit">{s.credit}</p>}
     </div>
   </div>
-  <section class="card" style="margin-top:18px">
-    <h2>Chapters ({s.chapters.length})</h2>
+  <section class="card chapters" aria-labelledby="ch-title">
+    <h2 id="ch-title">Chapters ({s.chapters.length})</h2>
     <ul class="chs">
       {latest(s).map((c) => (
         <li>
-          <a class="main" href={readUrl(s, c.n, primaryLang(c))}><span>Chapter {c.n} - {c.title}</span><time>{c.date}</time></a>
+          <a class="main" href={readUrl(s, c.n, primaryLang(c))}><span class="cn">Chapter {c.n}</span><span class="ct">{c.title}</span><time datetime={c.date}>{c.date}</time></a>
           <span class="langs">
-            {Object.keys(c.langs).map((l) => <a class="pill" href={readUrl(s, c.n, l)}>{LANG_LABEL[l] ?? l}</a>)}
+            {Object.keys(c.langs).map((l) => <a class="pill" href={readUrl(s, c.n, l)} hreflang={hreflang(l)} aria-label={`Chapter ${c.n} in ${LANG_LABEL[l] ?? l}`}>{LANG_LABEL[l] ?? l}</a>)}
           </span>
         </li>
       ))}
@@ -33,14 +54,38 @@ const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicSeries', name:
   </section>
 </Layout>
 <style>
-  .head { display:flex; gap:24px; } .head img { width:220px; border-radius:14px; align-self:flex-start; }
-  h1 { margin:0 0 10px; } .syn { color:#d6d0ec; max-width:70ch; } .chips { display:flex; flex-wrap:wrap; gap:6px; }
-  .credit { color:var(--mute); font-size:12.5px; }
-  .chs { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
-  .chs li { display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:6px 8px 6px 4px; }
-  .chs .main { flex:1; display:flex; justify-content:space-between; gap:12px; padding:10px 10px; min-height:44px; align-items:center; }
-  .chs li:hover { border-color:var(--accent); } .langs { display:flex; gap:6px; }
-  time { color:var(--mute); font-size:12.5px; }
-  @media (max-width:700px){ .head{flex-direction:column; align-items:center; text-align:center;} .head .chips{justify-content:center;} .head img{width:170px; align-self:center;}
-    .chs li{flex-direction:column; align-items:stretch; padding:8px;} .chs .main{flex-direction:column; align-items:flex-start; gap:2px; padding:6px 6px;} .langs{padding:0 6px 4px;} }
+  .head { position:relative; overflow:hidden; isolation:isolate; display:flex; gap:28px; padding:24px; }
+  .head-bg { position:absolute; inset:0; z-index:-1; background-size:cover; background-position:center; filter:blur(36px) brightness(.28) saturate(1.2); transform:scale(1.3); }
+  .cover { width:220px; flex:none; border-radius:14px; align-self:flex-start; box-shadow:0 16px 40px rgba(0,0,0,.55); }
+  .info { min-width:0; }
+  h1 { margin:0; font-size:clamp(26px,4vw,38px); }
+  .syn { color:var(--soft); max-width:70ch; margin:0 0 16px; }
+  .meta { display:flex; flex-wrap:wrap; gap:10px 28px; margin:0 0 18px; }
+  .meta dt { color:var(--mute); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
+  .meta dd { margin:2px 0 0; font-weight:600; }
+  .meta time { color:var(--text); font-size:inherit; }
+  .cta { display:flex; flex-wrap:wrap; gap:10px; }
+  .credit { color:var(--mute); font-size:12.5px; margin:16px 0 0; }
+
+  .chapters { margin-top:18px; }
+  .chs { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+  .chs li { display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--line); border-radius:var(--r); padding:4px 8px 4px 4px; transition:border-color .15s, background .15s; }
+  .chs li:hover { border-color:var(--accent); background:var(--panel3); }
+  .chs .main { flex:1; min-width:0; display:flex; align-items:center; gap:12px; padding:10px; min-height:48px; }
+  .cn { font-weight:700; white-space:nowrap; }
+  .ct { flex:1; min-width:0; color:var(--soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .langs { display:flex; gap:6px; flex:none; }
+
+  @media (max-width:700px){
+    .head { flex-direction:column; align-items:center; text-align:center; padding:20px 16px; }
+    .cover { width:170px; align-self:center; }
+    .chips, .cta, .meta { justify-content:center; }
+    .syn { margin-left:auto; margin-right:auto; }
+    .cta .btn { flex:1; }
+    .chs li { flex-direction:column; align-items:stretch; padding:6px; gap:6px; }
+    .chs .main { flex-wrap:wrap; gap:2px 10px; padding:6px 8px; }
+    .ct { flex-basis:100%; order:3; white-space:normal; }
+    .chs time { margin-left:auto; }
+    .langs { padding:0 6px 4px; }
+  }
 </style>

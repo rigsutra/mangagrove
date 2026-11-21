@@ -1,29 +1,69 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { allSeries, cover, latest, u } from '../lib/url';
+import { allSeries, cover, latest, seriesUrl, u, SITE_NAME } from '../lib/url';
+const genres = [...new Set(allSeries.flatMap((s) => s.genres))].sort();
 ---
-<Layout title="Browse - MangaGrove" active="browse">
+<Layout title={`Browse All Comics - ${SITE_NAME}`} description={`Browse every comic on ${SITE_NAME}: ${genres.join(', ')} and more, free to read in English and Hindi.`} active="browse" crumbs={[{ name: 'Browse', href: u('/browse/') }]}>
   <section class="card">
-    <h2>Browse Comics</h2>
-    <input id="q" class="filter" placeholder="Filter by title or genre..." />
+    <h1 class="section-title">Browse Comics</h1>
+    <div class="tools">
+      <label class="filter">
+        <span class="sr-only">Filter by title or genre</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 0 1 6.32 12.9l5.39 5.4-1.41 1.4-5.4-5.38A8 8 0 1 1 10 2Zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/></svg>
+        <input id="q" class="field" type="search" placeholder="Filter by title or genre…" autocomplete="off" />
+      </label>
+      <div class="genres" role="group" aria-label="Genres">
+        {genres.map((g) => <button type="button" class="pill" data-g={g.toLowerCase()} aria-pressed="false">{g}</button>)}
+      </div>
+    </div>
+    <p class="count" id="count" aria-live="polite">{allSeries.length} {allSeries.length === 1 ? 'comic' : 'comics'}</p>
     <div class="grid" id="list">
       {allSeries.map((s) => (
-        <a class="tile" data-k={(s.title + ' ' + s.genres.join(' ')).toLowerCase()} href={u(`/series/${s.slug}`)}>
-          <div class="img"><img src={cover(s)} alt={s.title} loading="lazy" /></div>
-          <div class="t">{s.title}</div><div class="s">Chapter {latest(s)[0].n} · {s.status}</div>
+        <a class="tile" data-k={(s.title + ' ' + s.genres.join(' ')).toLowerCase()} href={seriesUrl(s)}>
+          <div class="img"><img src={cover(s)} alt={`${s.title} cover`} loading="lazy" decoding="async" width="300" height="400" /><span class="badge">{s.status}</span></div>
+          <div class="t">{s.title}</div><div class="s">Chapter {latest(s)[0].n} · {s.genres.slice(0, 2).join(', ')}</div>
         </a>
       ))}
     </div>
+    <p class="empty" id="empty" hidden>No comics match that search.</p>
   </section>
 </Layout>
 <style>
-  .filter { width:100%; max-width:420px; margin-bottom:16px; background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:10px; }
+  .tools { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:10px; }
+  .filter { position:relative; display:flex; align-items:center; flex:1 1 280px; max-width:420px; }
+  .filter svg { position:absolute; left:12px; color:var(--mute); pointer-events:none; }
+  .filter .field { width:100%; min-height:44px; }
+  .genres { display:flex; flex-wrap:wrap; gap:6px; }
+  .genres .pill { font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+  .genres .pill[aria-pressed='true'] { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .count { margin:0 0 14px; color:var(--mute); font-size:13px; }
+  .empty { margin:24px 0 8px; text-align:center; color:var(--mute); }
+  @media (max-width:640px){ .filter .field{font-size:16px;} .filter{max-width:none;} }
 </style>
 <script>
   const q = document.getElementById('q') as HTMLInputElement;
-  const apply = () => document.querySelectorAll<HTMLElement>('#list .tile').forEach((t) => {
-    t.style.display = (t.dataset.k ?? '').includes(q.value.toLowerCase()) ? '' : 'none';
-  });
+  const tiles = [...document.querySelectorAll<HTMLElement>('#list .tile')];
+  const pills = [...document.querySelectorAll<HTMLButtonElement>('.genres .pill')];
+  const count = document.getElementById('count')!;
+  const empty = document.getElementById('empty')!;
+  let genre = '';
+  const apply = () => {
+    const term = q.value.trim().toLowerCase();
+    let shown = 0;
+    tiles.forEach((t) => {
+      const k = t.dataset.k ?? '';
+      const ok = k.includes(term) && (!genre || k.includes(genre));
+      t.hidden = !ok;
+      if (ok) shown++;
+    });
+    count.textContent = `${shown} ${shown === 1 ? 'comic' : 'comics'}`;
+    empty.hidden = shown > 0;
+  };
+  pills.forEach((p) => p.addEventListener('click', () => {
+    genre = genre === p.dataset.g ? '' : p.dataset.g ?? '';
+    pills.forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.g === genre)));
+    apply();
+  }));
   q.value = new URLSearchParams(location.search).get('q') ?? '';
   q.addEventListener('input', apply); apply();
 </script>
