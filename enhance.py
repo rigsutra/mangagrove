@@ -31,7 +31,7 @@ def up4(img, tile=192, pad=16):
 if __name__ == "__main__":
     ch = pathlib.Path(sys.argv[1]); pat = sys.argv[2] if len(sys.argv) > 2 else "*.jpg"
     dest = outdir(ch) / "enhanced"; dest.mkdir(parents=True, exist_ok=True)
-    for img in sorted(ch.glob(pat)):
+    for img in (sorted(p for p in ch.iterdir() if p.suffix.lower() in {'.jpg', '.jpeg', '.png', '.webp'}) if pat == "*.jpg" else sorted(ch.glob(pat))):
         im = cv2.imread(str(img))
         big = up4(im)
         if OUT_SCALE != 4:

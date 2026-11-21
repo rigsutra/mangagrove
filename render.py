@@ -62,7 +62,7 @@ if __name__ == "__main__":
     ocr = json.load(open(outdir(ch) / "ocr.json"))
     dest = outdir(ch) / "translated"; dest.mkdir(parents=True, exist_ok=True)
     skipped, art = [], []
-    for img in sorted(ch.glob("*.jpg")):
+    for img in sorted(p for p in ch.iterdir() if p.suffix.lower() in {'.jpg', '.jpeg', '.png', '.webp'}):
         im = cv2.imread(str(img))
         enh = outdir(ch) / "enhanced" / (img.stem + ".png")
         if enh.exists():  # AI-enhanced page from enhance.py

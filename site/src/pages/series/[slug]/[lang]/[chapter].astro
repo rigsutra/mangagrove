@@ -14,7 +14,7 @@ const label = LANG_LABEL[lang] ?? lang;
 const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicIssue', name: `${s.title} Chapter ${c.n}`, issueNumber: c.n, inLanguage: lang, isPartOf: { '@type': 'ComicSeries', name: s.title, url: abs(u(`/series/${s.slug}`)) } };
 const alternates = Object.keys(c.langs).map((l) => ({ lang: l, href: readUrl(s, c.n, l) }));
 ---
-<Layout title={`${s.title} Chapter ${c.n} (${label}) - Read Online | Hinglish Scans`} description={`Read ${s.title} Chapter ${c.n} - ${c.title} online in ${label}.`} image={cover(s)} jsonLd={jsonLd} alternates={alternates}>
+<Layout title={`${s.title} Chapter ${c.n} (${label}) - Read Online | MangaGrove`} description={`Read ${s.title} Chapter ${c.n} - ${c.title} online in ${label}.`} image={cover(s)} jsonLd={jsonLd} alternates={alternates}>
   <div class="top">
     <a class="back" href={u(`/series/${s.slug}`)}>← {s.title}</a>
     <h1>Chapter {c.n} - {c.title}</h1>

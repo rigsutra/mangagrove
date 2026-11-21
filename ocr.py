@@ -33,7 +33,7 @@ if __name__ == "__main__":
     ch = pathlib.Path(sys.argv[1])
     reader = easyocr.Reader(os.environ.get("OCR_LANGS", "ch_sim,en").split(","), gpu=False)
     out = {}
-    for img in sorted(ch.glob("*.jpg")):
+    for img in sorted(p for p in ch.iterdir() if p.suffix.lower() in {'.jpg', '.jpeg', '.png', '.webp'}):
         im = cv2.imread(str(img))
         S = float(os.environ.get("OCR_SCALE", "1"))
         if S != 1:  # enhance first: upscale + mild sharpen so tiny text becomes detectable
