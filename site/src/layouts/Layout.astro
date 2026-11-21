@@ -1,82 +1,197 @@
 ---
-import { u } from '../lib/url';
-const { title = 'Hinglish Manga Reader', active = '', description = 'Read manga, manhwa and manhua translated to Hinglish.', image = '', type = 'website', jsonLd = null, alternates = [] } = Astro.props;
+import { u, allSeries, cover, SITE_NAME, REPO_URL, hreflang } from '../lib/url';
+type Alt = { lang: string; href: string };
+type Crumb = { name: string; href: string };
+const {
+  title = `${SITE_NAME} - Read Webcomics in English & Hindi`,
+  active = '',
+  description = 'Read free webcomics online in English and Hindi. Fast, mobile friendly, no pop-ups.',
+  image = allSeries[0] ? cover(allSeries[0]) : '',
+  imageAlt = '',
+  type = 'website',
+  lang = 'en',
+  jsonLd = null,
+  alternates = [] as Alt[],
+  crumbs = [] as Crumb[],
+} = Astro.props;
 const noindex = !!import.meta.env.PUBLIC_NOINDEX;
-const canonical = Astro.site && !noindex ? new URL(Astro.url.pathname, Astro.site).href : '';
-const og = image && Astro.site ? new URL(image, Astro.site).href : '';
+const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
+const canonical = Astro.site && !noindex ? abs(Astro.url.pathname) : '';
+const og = image ? abs(image) : '';
+const ogLocale = lang === 'hi' ? 'hi_IN' : 'en_US';
+const ld = [
+  jsonLd,
+  crumbs.length > 0 && {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [{ name: 'Home', href: u('/') }, ...crumbs].map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: abs(c.href) })),
+  },
+].filter(Boolean);
 ---
 <!doctype html>
-<html lang="en">
+<html lang={hreflang(lang)}>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  {noindex && <meta name="robots" content="noindex, nofollow" />}
+  <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
   {canonical && <link rel="canonical" href={canonical} />}
+  <link rel="icon" href={u('/favicon.svg')} type="image/svg+xml" />
+  <link rel="icon" href={u('/favicon.ico')} sizes="32x32" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0d0b14" />
+  <meta property="og:site_name" content={SITE_NAME} />
   <meta property="og:type" content={type} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
+  <meta property="og:locale" content={ogLocale} />
+  {canonical && <meta property="og:url" content={canonical} />}
   {og && <meta property="og:image" content={og} />}
+  {og && <meta property="og:image:alt" content={imageAlt || title} />}
   <meta name="twitter:card" content={og ? 'summary_large_image' : 'summary'} />
-  <meta name="theme-color" content="#0d0b14" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  {og && <meta name="twitter:image" content={og} />}
   <link rel="sitemap" href={u('/sitemap-index.xml')} />
-  {alternates.map((a: { lang: string; href: string }) => <link rel="alternate" hreflang={a.lang} href={Astro.site ? new URL(a.href, Astro.site).href : a.href} />)}
-  {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  {alternates.map((a) => <link rel="alternate" hreflang={hreflang(a.lang)} href={abs(a.href)} />)}
+  {alternates.length > 1 && <link rel="alternate" hreflang="x-default" href={abs(alternates[0].href)} />}
+  {ld.map((d) => <script type="application/ld+json" set:html={JSON.stringify(d)} />)}
 </head>
 <body>
-  <header class="top">
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="site-header">
     <div class="bar">
-      <a class="brand" href={u('/')}><span class="logo">MG</span><span>MangaGrove</span></a>
-      <nav>
-        <a href={u('/')} class:list={[active === 'home' && 'on']}>Home</a>
-        <a href={u('/browse')} class:list={[active === 'browse' && 'on']}>Browse</a>
+      <a class="brand" href={u('/')} aria-label={`${SITE_NAME} home`}><span class="logo" aria-hidden="true">MG</span><span>{SITE_NAME}</span></a>
+      <nav aria-label="Main">
+        <a href={u('/')} class:list={[active === 'home' && 'on']} aria-current={active === 'home' ? 'page' : undefined}>Home</a>
+        <a href={u('/browse/')} class:list={[active === 'browse' && 'on']} aria-current={active === 'browse' ? 'page' : undefined}>Browse</a>
       </nav>
-      <form class="search" action={u('/browse')} method="get">
-        <input name="q" placeholder="Search" aria-label="Search" />
+      <form class="search" action={u('/browse/')} method="get" role="search">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 0 1 6.32 12.9l5.39 5.4-1.41 1.4-5.4-5.38A8 8 0 1 1 10 2Zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/></svg>
+        <input type="search" name="q" placeholder="Search comics" aria-label="Search comics" autocomplete="off" />
       </form>
     </div>
   </header>
-  <main><slot /></main>
-  <footer>
-    <p>Featured comic: Pepper&amp;Carrot by David Revoy, licensed CC BY 4.0 (peppercarrot.com). Artwork belongs to its creators.</p>
+  {crumbs.length > 0 && (
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href={u('/')}>Home</a></li>
+        {crumbs.map((c, i) => <li>{i === crumbs.length - 1 ? <span aria-current="page">{c.name}</span> : <a href={c.href}>{c.name}</a>}</li>)}
+      </ol>
+    </nav>
+  )}
+  <main id="content"><slot /></main>
+  <footer class="site-footer">
+    <div class="foot">
+      <div>
+        <a class="brand" href={u('/')}><span class="logo" aria-hidden="true">MG</span><span>{SITE_NAME}</span></a>
+        <p>Free webcomics in English and Hindi. Mobile friendly, no pop-ups.</p>
+      </div>
+      <ul>
+        <li><a href={u('/browse/')}>Browse all comics</a></li>
+        <li><a href={REPO_URL} rel="noopener">Source on GitHub</a></li>
+      </ul>
+    </div>
+    <p class="legal">Featured comic: <a href="https://www.peppercarrot.com" rel="noopener">Pepper&amp;Carrot</a> by David Revoy, licensed <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener">CC BY 4.0</a>. Artwork belongs to its creators.</p>
   </footer>
 </body>
 </html>
 <style is:global>
-  :root { --bg:#0d0b14; --panel:#171325; --panel2:#1f1a33; --line:#2c2548; --text:#ece8f7; --mute:#9a93b8; --accent:#8b5cf6; --accent2:#a78bfa; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  :root {
+    color-scheme: dark;
+    --bg:#0d0b14; --panel:#161223; --panel2:#1e1830; --panel3:#262040; --line:#2c2548; --line2:#3a3160;
+    --text:#ece8f7; --soft:#d6d0ec; --mute:#a39cc0; --accent:#8b5cf6; --accent2:#b9a2ff; --accent-ink:#fff;
+    --r-sm:8px; --r:12px; --r-lg:18px;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+    --wrap:1240px; --gutter:20px;
+    --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",sans-serif;
+  }
+  *, *::before, *::after { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; text-size-adjust:100%; scroll-padding-top:72px; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--text); font:15px/1.55 var(--font); -webkit-font-smoothing:antialiased; padding-bottom:env(safe-area-inset-bottom); }
+  h1, h2, h3 { line-height:1.2; letter-spacing:-.01em; text-wrap:balance; }
+  p { text-wrap:pretty; }
   a { color:inherit; text-decoration:none; }
-  img { display:block; max-width:100%; }
-  .top { position:sticky; top:0; z-index:20; background:rgba(23,19,37,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
-  .bar { max-width:1240px; margin:0 auto; padding:10px 20px; display:flex; align-items:center; gap:24px; }
-  .brand { display:flex; align-items:center; gap:10px; font-weight:700; }
-  .logo { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#c084fc); display:grid; place-items:center; font-weight:800; font-size:14px; }
-  nav { display:flex; gap:6px; }
-  nav a { padding:6px 12px; border-radius:8px; color:var(--mute); }
-  nav a:hover, nav a.on { color:var(--text); background:var(--panel2); }
-  .search { margin-left:auto; }
-  .search input { background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:8px 12px; border-radius:10px; width:200px; }
-  main { max-width:1240px; margin:0 auto; padding:24px 20px 60px; }
-  footer { border-top:1px solid var(--line); color:var(--mute); text-align:center; padding:24px 20px; font-size:13px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; }
-  .card h2 { margin:0 0 14px; font-size:18px; display:flex; align-items:center; gap:8px; }
-  .card h2::before { content:''; width:6px; height:20px; border-radius:3px; background:var(--accent); }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
-  .tile .img { aspect-ratio:3/4; border-radius:12px; overflow:hidden; background:var(--panel2); border:1px solid var(--line); }
-  .tile .img img { width:100%; height:100%; object-fit:cover; transition:transform .25s; }
-  .tile:hover .img img { transform:scale(1.05); }
-  .tile .t { margin-top:8px; font-weight:600; font-size:14px; line-height:1.3; }
-  .tile .s { color:var(--mute); font-size:12.5px; }
-  .chip { display:inline-block; padding:3px 10px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--accent2); font-size:12px; }
-  .btn { display:inline-block; padding:10px 18px; border-radius:10px; background:var(--accent); font-weight:600; }
+  img { display:block; max-width:100%; height:auto; }
+  :focus-visible { outline:2px solid var(--accent2); outline-offset:2px; border-radius:4px; }
+  ::selection { background:var(--accent); color:var(--accent-ink); }
+
+  .skip { position:absolute; left:12px; top:-60px; z-index:100; padding:10px 14px; border-radius:var(--r-sm); background:var(--accent); color:var(--accent-ink); font-weight:600; }
+  .skip:focus { top:12px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+  .site-header { position:sticky; top:0; z-index:40; background:rgba(13,11,20,.82); backdrop-filter:saturate(1.4) blur(12px); -webkit-backdrop-filter:saturate(1.4) blur(12px); border-bottom:1px solid var(--line); }
+  .bar { max-width:var(--wrap); margin:0 auto; padding:10px var(--gutter); display:flex; align-items:center; gap:20px; }
+  .brand { display:inline-flex; align-items:center; gap:10px; font-weight:750; font-size:16px; white-space:nowrap; }
+  .logo { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#d08cff); display:grid; place-items:center; font-weight:800; font-size:13px; color:#fff; box-shadow:0 4px 14px rgba(139,92,246,.35); }
+  .site-header nav { display:flex; gap:4px; }
+  .site-header nav a { padding:8px 12px; border-radius:var(--r-sm); color:var(--mute); font-weight:550; transition:color .15s, background .15s; }
+  .site-header nav a:hover { color:var(--text); background:var(--panel2); }
+  .site-header nav a.on { color:var(--text); background:var(--panel3); }
+  .search { margin-left:auto; position:relative; display:flex; align-items:center; }
+  .search svg { position:absolute; left:12px; color:var(--mute); pointer-events:none; }
+  .search input, .field { background:var(--panel2); border:1px solid var(--line); color:var(--text); font:inherit; padding:9px 12px 9px 36px; border-radius:var(--r); width:240px; transition:border-color .15s, background .15s; }
+  .search input::placeholder, .field::placeholder { color:var(--mute); }
+  .search input:focus, .field:focus { outline:none; border-color:var(--accent); background:var(--panel); }
+
+  .crumbs { max-width:var(--wrap); width:100%; margin:0 auto; padding:14px var(--gutter) 0; font-size:13px; color:var(--mute); }
+  .crumbs ol { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:4px 8px; }
+  .crumbs li + li::before { content:'/'; margin-right:8px; opacity:.5; }
+  .crumbs a:hover { color:var(--text); }
+  .crumbs [aria-current] { color:var(--soft); }
+
+  main { flex:1; width:100%; max-width:var(--wrap); margin:0 auto; padding:20px var(--gutter) 64px; }
+
+  .site-footer { border-top:1px solid var(--line); background:var(--panel); color:var(--mute); font-size:13.5px; }
+  .foot { max-width:var(--wrap); margin:0 auto; padding:28px var(--gutter) 8px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px; }
+  .foot p { margin:10px 0 0; max-width:42ch; }
+  .foot ul { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+  .foot ul a:hover, .legal a:hover { color:var(--text); }
+  .legal { max-width:var(--wrap); margin:0 auto; padding:12px var(--gutter) 28px; font-size:12.5px; }
+  .legal a { text-decoration:underline; text-underline-offset:2px; }
+
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px; }
+  .section-title, .card h2 { margin:0 0 16px; font-size:18px; display:flex; align-items:center; gap:10px; }
+  .card h2::before { content:''; width:5px; height:20px; border-radius:3px; background:linear-gradient(var(--accent),#d08cff); }
+  .stack > * + * { margin-top:18px; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:18px 14px; }
+  .tile { display:block; border-radius:var(--r); }
+  .tile .img { position:relative; aspect-ratio:3/4; border-radius:var(--r); overflow:hidden; background:var(--panel2); border:1px solid var(--line); transition:border-color .2s, box-shadow .2s, transform .2s; }
+  .tile .img img { width:100%; height:100%; object-fit:cover; transition:transform .35s ease; }
+  .tile .img .badge { position:absolute; left:8px; top:8px; }
+  .tile:hover .img { border-color:var(--accent); box-shadow:var(--shadow); transform:translateY(-2px); }
+  .tile:hover .img img { transform:scale(1.04); }
+  .tile .t { margin-top:10px; font-weight:650; font-size:14.5px; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .tile:hover .t { color:var(--accent2); }
+  .tile .s { margin-top:2px; color:var(--mute); font-size:12.5px; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; padding:0; list-style:none; }
+  .chip { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--accent2); font-size:12px; font-weight:550; }
+  .chip.solid { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .badge { padding:2px 8px; border-radius:6px; background:rgba(13,11,20,.8); backdrop-filter:blur(4px); font-size:11px; font-weight:650; color:var(--soft); }
+
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 20px; border-radius:var(--r); border:1px solid transparent; background:var(--accent); color:var(--accent-ink); font-weight:650; transition:filter .15s, background .15s, border-color .15s, transform .1s; }
   .btn:hover { filter:brightness(1.1); }
-  .btn { min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
-  .pill { display:inline-flex; align-items:center; min-height:36px; padding:0 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-weight:600; font-size:14px; }
-  .pill.on { background:var(--accent); border-color:var(--accent); }
-  a:focus-visible, button:focus-visible, input:focus-visible { outline:2px solid var(--accent2); outline-offset:2px; }
-  body { -webkit-text-size-adjust:100%; padding-bottom:env(safe-area-inset-bottom); }
-  img { height:auto; }
-  @media (max-width:640px){ .grid{grid-template-columns:repeat(2,1fr); gap:12px;} .search input{font-size:16px; min-height:44px;} nav a{padding:10px 12px;} .card{padding:14px; border-radius:14px;} .bar{flex-wrap:wrap; gap:8px 12px; padding:10px 14px;} .brand{white-space:nowrap;} .search{order:3; margin-left:0; flex:1 0 100%;} .search input{width:100%;} main{padding:16px 14px 48px;} }
+  .btn:active { transform:translateY(1px); }
+  .btn.ghost { background:rgba(255,255,255,.04); border-color:var(--line2); color:var(--text); }
+  .btn.ghost:hover { background:var(--panel3); filter:none; }
+  .pill { display:inline-flex; align-items:center; min-height:36px; padding:0 14px; border-radius:999px; border:1px solid var(--line2); background:var(--panel2); color:var(--text); font-weight:600; font-size:13.5px; transition:background .15s, border-color .15s; }
+  .pill:hover { border-color:var(--accent); }
+  .pill.on { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  time { color:var(--mute); font-size:12.5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  @media (max-width:640px){
+    :root { --gutter:14px; }
+    .bar { flex-wrap:wrap; gap:8px 10px; }
+    .site-header nav { margin-left:auto; }
+    .site-header nav a { padding:10px 12px; }
+    .search { order:3; margin-left:0; flex:1 0 100%; }
+    .search input { width:100%; font-size:16px; min-height:44px; }
+    .grid { grid-template-columns:repeat(2,1fr); gap:16px 12px; }
+    .card { padding:16px; border-radius:var(--r); }
+    main { padding-top:16px; padding-bottom:48px; }
+  }
+  @media (prefers-reduced-motion:reduce){ *, *::before, *::after { transition:none !important; animation:none !important; scroll-behavior:auto !important; } }
 </style>

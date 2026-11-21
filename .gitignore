@@ -9,3 +9,7 @@ models/
 # copyrighted page images and translations: keep out of git
 site/public/series/soul-land/
 tr/
+# local-only batch scripts that name specific titles
+scripts/prep_*
+scripts/build_site_data.py
+PLAN.md
