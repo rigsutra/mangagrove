@@ -1,36 +1,46 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { allSeries, cover, latest, u } from '../../lib/url';
+import { allSeries, cover, latest, oldest, readUrl, primaryLang, u, LANG_LABEL } from '../../lib/url';
 export function getStaticPaths() { return allSeries.map((s) => ({ params: { slug: s.slug }, props: { s } })); }
 const { s } = Astro.props;
 const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
-const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicSeries', name: s.title, description: s.synopsis, genre: s.genres, inLanguage: 'hi-Latn', image: abs(cover(s)), url: abs(u(`/series/${s.slug}`)), numberOfEpisodes: s.chapters.length };
-const first = [...s.chapters].sort((a, b) => a.n - b.n)[0];
+const first = oldest(s)[0];
+const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicSeries', name: s.title, description: s.synopsis, genre: s.genres, inLanguage: s.langs, image: abs(cover(s)), url: abs(u(`/series/${s.slug}`)), numberOfEpisodes: s.chapters.length };
 ---
-<Layout title={`${s.title} - Read Online in Hinglish | Hinglish Scans`} description={s.synopsis} image={cover(s)} type="article" jsonLd={jsonLd}>
+<Layout title={`${s.title} - Read Online in ${s.langs.map((l) => LANG_LABEL[l] ?? l).join(' & ')} | Hinglish Scans`} description={s.synopsis} image={cover(s)} type="article" jsonLd={jsonLd}>
   <div class="head card">
-    <img src={cover(s)} alt={s.title} />
+    <img src={cover(s)} alt={s.title} width="220" height="308" />
     <div>
       <h1>{s.title}</h1>
-      <p><span class="chip">{s.status}</span> {s.genres.map((g) => <span class="chip">{g}</span>)}</p>
+      <p class="chips"><span class="chip">{s.status}</span>{s.genres.map((g) => <span class="chip">{g}</span>)}</p>
       <p class="syn">{s.synopsis}</p>
-      <a class="btn" href={u(`/series/${s.slug}/${first.n}`)}>Read Chapter {first.n}</a>
+      <a class="btn" href={readUrl(s, first.n, primaryLang(first))}>Read Chapter {first.n}</a>
+      {s.credit && <p class="credit">{s.credit}</p>}
     </div>
   </div>
   <section class="card" style="margin-top:18px">
     <h2>Chapters ({s.chapters.length})</h2>
     <ul class="chs">
       {latest(s).map((c) => (
-        <li><a href={u(`/series/${s.slug}/${c.n}`)}><span>Chapter {c.n}{c.title ? ` - ${c.title}` : ''}</span><time>{c.date} · {c.pages} pages</time></a></li>
+        <li>
+          <a class="main" href={readUrl(s, c.n, primaryLang(c))}><span>Chapter {c.n} - {c.title}</span><time>{c.date}</time></a>
+          <span class="langs">
+            {Object.keys(c.langs).map((l) => <a class="pill" href={readUrl(s, c.n, l)}>{LANG_LABEL[l] ?? l}</a>)}
+          </span>
+        </li>
       ))}
     </ul>
   </section>
 </Layout>
 <style>
   .head { display:flex; gap:24px; } .head img { width:220px; border-radius:14px; align-self:flex-start; }
-  h1 { margin:0 0 10px; } .syn { color:#d6d0ec; max-width:70ch; }
-  .chs { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
-  .chs a { display:flex; justify-content:space-between; gap:12px; padding:12px 14px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; }
-  .chs a:hover { border-color:var(--accent); } time { color:var(--mute); font-size:12.5px; }
-  @media (max-width:700px){ .head{flex-direction:column; align-items:center; text-align:center;} .chs a{flex-direction:column;} }
+  h1 { margin:0 0 10px; } .syn { color:#d6d0ec; max-width:70ch; } .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .credit { color:var(--mute); font-size:12.5px; }
+  .chs { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+  .chs li { display:flex; align-items:center; gap:10px; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:6px 8px 6px 4px; }
+  .chs .main { flex:1; display:flex; justify-content:space-between; gap:12px; padding:10px 10px; min-height:44px; align-items:center; }
+  .chs li:hover { border-color:var(--accent); } .langs { display:flex; gap:6px; }
+  time { color:var(--mute); font-size:12.5px; }
+  @media (max-width:700px){ .head{flex-direction:column; align-items:center; text-align:center;} .head .chips{justify-content:center;} .head img{width:170px; align-self:center;}
+    .chs li{flex-direction:column; align-items:stretch; padding:8px;} .chs .main{flex-direction:column; align-items:flex-start; gap:2px; padding:6px 6px;} .langs{padding:0 6px 4px;} }
 </style>

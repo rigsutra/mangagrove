@@ -1,0 +1,47 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { allSeries, oldest, readUrl, pageUrl, cover, u, LANG_LABEL } from '../../../../lib/url';
+export function getStaticPaths() {
+  return allSeries.flatMap((s) => s.chapters.flatMap((c) => Object.keys(c.langs).map((lang) => ({ params: { slug: s.slug, lang, chapter: String(c.n) }, props: { s, c, lang } }))));
+}
+const { s, c, lang } = Astro.props;
+const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
+const sorted = oldest(s).filter((x) => x.langs[lang]);
+const i = sorted.findIndex((x) => x.n === c.n);
+const prev = sorted[i - 1], next = sorted[i + 1];
+const dims = c.langs[lang];
+const label = LANG_LABEL[lang] ?? lang;
+const jsonLd = { '@context': 'https://schema.org', '@type': 'ComicIssue', name: `${s.title} Chapter ${c.n}`, issueNumber: c.n, inLanguage: lang, isPartOf: { '@type': 'ComicSeries', name: s.title, url: abs(u(`/series/${s.slug}`)) } };
+const alternates = Object.keys(c.langs).map((l) => ({ lang: l, href: readUrl(s, c.n, l) }));
+---
+<Layout title={`${s.title} Chapter ${c.n} (${label}) - Read Online | Hinglish Scans`} description={`Read ${s.title} Chapter ${c.n} - ${c.title} online in ${label}.`} image={cover(s)} jsonLd={jsonLd} alternates={alternates}>
+  <div class="top">
+    <a class="back" href={u(`/series/${s.slug}`)}>← {s.title}</a>
+    <h1>Chapter {c.n} - {c.title}</h1>
+    <div class="langs">
+      {Object.keys(c.langs).map((l) => <a class:list={['pill', l === lang && 'on']} href={readUrl(s, c.n, l)}>{LANG_LABEL[l] ?? l}</a>)}
+    </div>
+  </div>
+  <div class="pages">
+    {dims.map(([w, h], k) => <img src={pageUrl(s, lang, c.n, k)} width={w} height={h} alt={`${s.title} chapter ${c.n} page ${k + 1}`} loading={k < 2 ? 'eager' : 'lazy'} decoding="async" />)}
+  </div>
+  {s.credit && <p class="credit">{s.credit}</p>}
+  <nav class="rnav" aria-label="Chapter navigation">
+    {prev ? <a class="btn" href={readUrl(s, prev.n, lang)}>‹ Prev</a> : <span class="btn off">‹ Prev</span>}
+    <a class="btn mid" href={u(`/series/${s.slug}`)}>Chapters</a>
+    {next ? <a class="btn" href={readUrl(s, next.n, lang)}>Next ›</a> : <span class="btn off">Next ›</span>}
+  </nav>
+</Layout>
+<style>
+  .top { max-width:900px; margin:0 auto 14px; display:grid; gap:8px; }
+  .back { color:var(--accent2); min-height:44px; display:inline-flex; align-items:center; width:fit-content; }
+  h1 { margin:0; font-size:20px; } .langs { display:flex; gap:8px; flex-wrap:wrap; }
+  .pages { max-width:900px; margin:0 auto; background:#000; }
+  .pages img { width:100%; height:auto; }
+  .credit { max-width:900px; margin:14px auto 0; color:var(--mute); font-size:12.5px; }
+  .rnav { position:fixed; left:0; right:0; bottom:0; z-index:30; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:rgba(23,19,37,.96); backdrop-filter:blur(8px); border-top:1px solid var(--line); }
+  .rnav .btn { width:100%; } .rnav .mid { background:var(--panel2); border:1px solid var(--line); } .rnav .off { opacity:.35; background:var(--panel2); }
+  main { padding-bottom:96px; }
+  @media (max-width:640px){ .pages { margin-left:-14px; margin-right:-14px; max-width:none; } }
+  @media (min-width:900px){ .rnav { left:50%; right:auto; width:min(900px,100%); transform:translateX(-50%); border-radius:14px 14px 0 0; border:1px solid var(--line); border-bottom:0; } }
+</style>

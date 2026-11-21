@@ -1,20 +1,23 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { allSeries, cover, latest, u } from '../lib/url';
+import { allSeries, cover, latest, oldest, readUrl, primaryLang, u, LANG_LABEL } from '../lib/url';
 const featured = allSeries[0];
+const first = oldest(featured)[0];
 ---
-<Layout title="Hinglish Scans - Read Manga, Manhwa & Manhua in Hinglish" active="home">
+<Layout title="Hinglish Scans - Read Manga, Manhwa & Webcomics in English and Hindi" description="Read free webcomics online in English and Hindi. Mobile friendly, no pop-ups." image={cover(featured)} active="home">
   <section class="hero">
     <div class="hero-bg" style={`background-image:url(${cover(featured)})`}></div>
     <div class="hero-body">
-      <img class="hero-cover" src={cover(featured)} alt={featured.title} />
+      <img class="hero-cover" src={cover(featured)} alt={featured.title} width="200" height="280" />
       <div>
         <span class="chip">Featured</span>
         <h1>{featured.title}</h1>
         <p class="syn">{featured.synopsis}</p>
-        <p>{featured.genres.map((g) => <span class="chip">{g}</span>)}</p>
-        <a class="btn" href={u(`/series/${featured.slug}/${latest(featured).at(-1)?.n}`)}>Start reading</a>
-        <a class="btn ghost" href={u(`/series/${featured.slug}`)}>Details</a>
+        <p class="chips">{featured.genres.map((g) => <span class="chip">{g}</span>)}{featured.langs.map((l) => <span class="chip">{LANG_LABEL[l] ?? l}</span>)}</p>
+        <div class="cta">
+          <a class="btn" href={readUrl(featured, first.n, primaryLang(first))}>Start reading</a>
+          <a class="btn ghost" href={u(`/series/${featured.slug}`)}>Details</a>
+        </div>
       </div>
     </div>
   </section>
@@ -25,7 +28,7 @@ const featured = allSeries[0];
       <div class="grid">
         {allSeries.map((s) => (
           <a class="tile" href={u(`/series/${s.slug}`)}>
-            <div class="img"><img src={cover(s)} alt={s.title} loading="lazy" /></div>
+            <div class="img"><img src={cover(s)} alt={s.title} loading="lazy" width="300" height="420" /></div>
             <div class="t">{s.title}</div>
             <div class="s">Chapter {latest(s)[0].n}</div>
           </a>
@@ -36,7 +39,7 @@ const featured = allSeries[0];
       <h2>Popular</h2>
       <ol class="pop">
         {allSeries.map((s, i) => (
-          <li><a href={u(`/series/${s.slug}`)}><b>{i + 1}</b><img src={cover(s)} alt="" /><span><span class="pt">{s.title}</span><span class="ps">{s.genres.join(', ')}</span></span></a></li>
+          <li><a href={u(`/series/${s.slug}`)}><b>{i + 1}</b><img src={cover(s)} alt="" width="44" height="58" /><span><span class="pt">{s.title}</span><span class="ps">{s.genres.join(', ')}</span></span></a></li>
         ))}
       </ol>
     </aside>
@@ -47,12 +50,12 @@ const featured = allSeries[0];
     <div class="updates">
       {allSeries.map((s) => (
         <div class="upd">
-          <a href={u(`/series/${s.slug}`)}><img src={cover(s)} alt={s.title} loading="lazy" /></a>
+          <a href={u(`/series/${s.slug}`)}><img src={cover(s)} alt={s.title} loading="lazy" width="84" height="112" /></a>
           <div>
             <a class="ut" href={u(`/series/${s.slug}`)}>{s.title}</a>
             <ul>
               {latest(s).slice(0, 3).map((c) => (
-                <li><a href={u(`/series/${s.slug}/${c.n}`)}>Chapter {c.n}{c.title ? ` - ${c.title}` : ''}</a><time>{c.date}</time></li>
+                <li><a href={readUrl(s, c.n, primaryLang(c))}>Chapter {c.n} - {c.title}</a><time>{c.date}</time></li>
               ))}
             </ul>
           </div>
@@ -68,10 +71,12 @@ const featured = allSeries[0];
   .hero-cover { width:200px; border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.6); }
   h1 { margin:10px 0 8px; font-size:34px; line-height:1.15; }
   .syn { color:#d6d0ec; max-width:60ch; }
-  .btn.ghost { background:transparent; border:1px solid var(--line); margin-left:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .cta { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+  .btn.ghost { background:transparent; border:1px solid var(--line); }
   .cols { display:grid; grid-template-columns:1fr 320px; gap:18px; }
   .pop { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
-  .pop a { display:flex; gap:12px; align-items:center; }
+  .pop a { display:flex; gap:12px; align-items:center; min-height:44px; }
   .pop b { color:var(--accent2); width:14px; }
   .pop img { width:44px; height:58px; object-fit:cover; border-radius:8px; }
   .pt { display:block; font-weight:600; font-size:14px; } .ps { display:block; color:var(--mute); font-size:12px; }
@@ -80,6 +85,8 @@ const featured = allSeries[0];
   .upd img { width:84px; height:112px; object-fit:cover; border-radius:10px; }
   .ut { font-weight:700; } .upd ul { list-style:none; padding:0; margin:8px 0 0; display:grid; gap:6px; }
   .upd li { display:flex; justify-content:space-between; gap:10px; font-size:13.5px; background:var(--panel); border-radius:8px; padding:6px 10px; }
-  .upd li:hover { background:#261f40; } time { color:var(--mute); font-size:12px; }
-  @media (max-width:900px){ .cols{grid-template-columns:1fr;} .hero-body{flex-direction:column; text-align:center;} .hero-cover{width:150px;} }
+  .upd li a { min-height:32px; display:flex; align-items:center; flex:1; }
+  time { color:var(--mute); font-size:12px; }
+  @media (max-width:900px){ .cols{grid-template-columns:1fr;} .hero-body{flex-direction:column; text-align:center;} .hero-cover{width:150px;} .chips,.cta{justify-content:center;} }
+  @media (max-width:640px){ h1{font-size:26px;} .hero-body{padding:20px 16px;} .updates{grid-template-columns:1fr;} .upd li{flex-direction:column; gap:2px;} .btn{flex:1;} }
 </style>

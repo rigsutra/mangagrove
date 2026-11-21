@@ -1,20 +1,256 @@
 [
  {
-  "slug": "soul-land",
-  "title": "Soul Land (Hinglish)",
+  "slug": "pepper-and-carrot",
+  "title": "Pepper&Carrot",
   "genres": [
-   "Action",
-   "Adventure",
-   "Fantasy"
+   "Fantasy",
+   "Comedy",
+   "Adventure"
   ],
   "status": "Ongoing",
-  "synopsis": "Tang San, a disciple of the Tang Sect, gives up his life to protect its forbidden art, and is reborn in Combat Continent, a world where everyone awakens a Spirit. Translated to Hinglish as a personal translation experiment.",
+  "langs": [
+   "en",
+   "hi"
+  ],
+  "synopsis": "A young witch, Pepper, and her cat Carrot stumble through magical mishaps in the world of Hereva. An open webcomic by David Revoy, free to read and share under a Creative Commons license.",
+  "credit": "Pepper&Carrot by David Revoy, www.peppercarrot.com, licensed CC BY 4.0",
   "chapters": [
    {
     "n": 1,
-    "title": "The Tang Apprentice",
-    "pages": 24,
-    "date": "2026-11-21"
+    "title": "Potion of Flight",
+    "date": "2015-05-08",
+    "langs": {
+     "en": [
+      [
+       1200,
+       321
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       24
+      ]
+     ],
+     "hi": [
+      [
+       1200,
+       321
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       24
+      ]
+     ]
+    }
+   },
+   {
+    "n": 2,
+    "title": "Rainbow Potions",
+    "date": "2015-06-01",
+    "langs": {
+     "en": [
+      [
+       1200,
+       321
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       435
+      ]
+     ],
+     "hi": [
+      [
+       1200,
+       321
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       435
+      ]
+     ]
+    }
+   },
+   {
+    "n": 3,
+    "title": "The Secret Ingredients",
+    "date": "2015-06-01",
+    "langs": {
+     "en": [
+      [
+       1200,
+       321
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       987
+      ]
+     ]
+    }
+   },
+   {
+    "n": 4,
+    "title": "Stroke of Genius",
+    "date": "2015-06-01",
+    "langs": {
+     "en": [
+      [
+       1200,
+       321
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       314
+      ],
+      [
+       1200,
+       760
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1199
+      ]
+     ]
+    }
+   },
+   {
+    "n": 5,
+    "title": "Special Holiday Episode",
+    "date": "2015-06-01",
+    "langs": {
+     "en": [
+      [
+       1200,
+       321
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1694
+      ],
+      [
+       1200,
+       1199
+      ]
+     ]
+    }
    }
   ]
  }
