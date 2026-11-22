@@ -6,8 +6,7 @@ raw_en/
 models/
 .DS_Store
 .claude/
-# copyrighted page images and translations: keep out of git
-site/public/series/soul-land/
+# translations: keep out of git
 tr/
 # local-only batch scripts that name specific titles
 scripts/prep_*
