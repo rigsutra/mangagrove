@@ -13,3 +13,8 @@ tr/
 scripts/prep_*
 scripts/build_site_data.py
 PLAN.md
+
+.env
+
+# page images / covers
+*.webp

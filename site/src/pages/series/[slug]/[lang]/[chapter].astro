@@ -1,6 +1,6 @@
 ---
 import Layout from '../../../../layouts/Layout.astro';
-import { allSeries, oldest, readUrl, seriesUrl, pageUrl, cover, LANG_LABEL, SITE_NAME, hreflang } from '../../../../lib/url';
+import { allSeries, altNames, baseName, chapterName, oldest, readUrl, seriesUrl, pageUrl, cover, LANG_LABEL, SITE_NAME, hreflang } from '../../../../lib/url';
 export function getStaticPaths() {
   return allSeries.flatMap((s) => s.chapters.flatMap((c) => Object.keys(c.langs).map((lang) => ({ params: { slug: s.slug, lang, chapter: String(c.n) }, props: { s, c, lang } }))));
 }
@@ -13,7 +13,7 @@ const dims = c.langs[lang];
 const label = LANG_LABEL[lang] ?? lang;
 const url = readUrl(s, c.n, lang);
 const jsonLd = {
-  '@context': 'https://schema.org', '@type': 'ComicIssue', name: `${s.title} Chapter ${c.n}: ${c.title}`, issueNumber: c.n, inLanguage: lang,
+  '@context': 'https://schema.org', '@type': 'ComicIssue', name: `${s.title} ${chapterName(c)}`, issueNumber: c.n, inLanguage: lang,
   datePublished: c.date, url: abs(url), image: abs(pageUrl(s, lang, c.n, Math.min(1, dims.length - 1))),
   ...(s.credit ? { creditText: s.credit } : {}),
   isPartOf: { '@type': 'ComicSeries', name: s.title, url: abs(seriesUrl(s)) },
@@ -21,14 +21,14 @@ const jsonLd = {
 const alternates = Object.keys(c.langs).map((l) => ({ lang: l, href: readUrl(s, c.n, l) }));
 ---
 <Layout
-  title={`${s.title} Chapter ${c.n}: ${c.title} (${label}) - Read Online | ${SITE_NAME}`}
-  description={`Read ${s.title} Chapter ${c.n} "${c.title}" free online in ${label}. ${dims.length} pages, mobile friendly reader on ${SITE_NAME}.`}
+  title={`${baseName(s)} ${chapterName(c)} (${label}) - Read Online | ${SITE_NAME}`}
+  description={`Read ${baseName(s)}${altNames(s) ? ` (${altNames(s)})` : ''} ${chapterName(c)} free online in ${label}. ${dims.length} pages, mobile friendly reader on ${SITE_NAME}.`}
   image={cover(s)} imageAlt={`${s.title} cover`} type="article" lang={lang} jsonLd={jsonLd} alternates={alternates}
   crumbs={[{ name: s.title, href: seriesUrl(s) }, { name: `Chapter ${c.n}`, href: url }]}
 >
   <div class="reader">
     <header class="rhead">
-      <h1><span class="rs">{s.title}</span> Chapter {c.n}: {c.title}</h1>
+      <h1><span class="rs">{s.title}</span> {chapterName(c)}</h1>
       <div class="langs" role="group" aria-label="Language">
         {Object.keys(c.langs).map((l) => <a class:list={['pill', l === lang && 'on']} href={readUrl(s, c.n, l)} hreflang={hreflang(l)} aria-current={l === lang ? 'page' : undefined}>{LANG_LABEL[l] ?? l}</a>)}
       </div>
@@ -38,7 +38,7 @@ const alternates = Object.keys(c.langs).map((l) => ({ lang: l, href: readUrl(s, 
     </div>
     <div class="end">
       <p>End of Chapter {c.n}</p>
-      {next ? <a class="btn" href={readUrl(s, next.n, lang)}>Next: Chapter {next.n} - {next.title}</a> : <a class="btn ghost" href={seriesUrl(s)}>Back to all chapters</a>}
+      {next ? <a class="btn" href={readUrl(s, next.n, lang)}>Next: {chapterName(next)}</a> : <a class="btn ghost" href={seriesUrl(s)}>Back to all chapters</a>}
     </div>
     {s.credit && <p class="credit">{s.credit}</p>}
   </div>

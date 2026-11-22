@@ -3,9 +3,9 @@ import { u, allSeries, cover, SITE_NAME, REPO_URL, hreflang } from '../lib/url';
 type Alt = { lang: string; href: string };
 type Crumb = { name: string; href: string };
 const {
-  title = `${SITE_NAME} - Read Webcomics in English & Hindi`,
+  title = `${SITE_NAME} - Read Manga Online in Hinglish, Hindi & English`,
   active = '',
-  description = 'Read free webcomics online in English and Hindi. Fast, mobile friendly, no pop-ups.',
+  description = 'Read manga and webcomics free online in Hinglish, Hindi and English. Fast, mobile friendly, no pop-ups.',
   image = allSeries[0] ? cover(allSeries[0]) : '',
   imageAlt = '',
   type = 'website',
@@ -18,7 +18,7 @@ const noindex = !!import.meta.env.PUBLIC_NOINDEX;
 const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
 const canonical = Astro.site && !noindex ? abs(Astro.url.pathname) : '';
 const og = image ? abs(image) : '';
-const ogLocale = lang === 'hi' ? 'hi_IN' : 'en_US';
+const ogLocale = lang === 'hi' || lang === 'hinglish' ? 'hi_IN' : 'en_US';
 const ld = [
   jsonLd,
   crumbs.length > 0 && {

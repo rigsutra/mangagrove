@@ -8,6 +8,8 @@ def outdir(ch):
 
 import cv2, easyocr
 
+MAX_W, MAX_H = int(os.environ.get("OCR_MAXW", "480")), int(os.environ.get("OCR_MAXH", "420"))  # original-page px
+
 def group(dets, gap=int(os.environ.get("OCR_GAP", "22"))):
     """Merge OCR lines that sit close together (same bubble / caption)."""
     boxes = [{"b": [min(p[0] for p in d[0]), min(p[1] for p in d[0]),
@@ -21,7 +23,10 @@ def group(dets, gap=int(os.environ.get("OCR_GAP", "22"))):
             for j in range(i + 1, len(boxes)):
                 a, b = boxes[i]["b"], boxes[j]["b"]
                 if a[0] - gap < b[2] and b[0] - gap < a[2] and a[1] - gap < b[3] and b[1] - gap < a[3]:
-                    boxes[i] = {"b": [min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3])],
+                    # cap merged size so art/SFX hits can't chain separate bubbles into one panel-sized box
+                    if max(a[2], b[2]) - min(a[0], b[0]) > MAX_W or max(a[3], b[3]) - min(a[1], b[1]) > MAX_H:
+                        continue
+                    boxes[i] ={"b": [min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3])],
                                 "t": boxes[i]["t"] + boxes[j]["t"], "c": min(boxes[i]["c"], boxes[j]["c"])}
                     del boxes[j]; merged = True; break
             if merged: break

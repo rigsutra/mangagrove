@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { allSeries, cover, latest, oldest, readUrl, seriesUrl, primaryLang, LANG_LABEL, SITE_NAME, hreflang } from '../../lib/url';
+import { allSeries, altNames, baseName, chapterName, cover, latest, oldest, readUrl, seriesUrl, primaryLang, LANG_LABEL, SITE_NAME, hreflang } from '../../lib/url';
 export function getStaticPaths() { return allSeries.map((s) => ({ params: { slug: s.slug }, props: { s } })); }
 const { s } = Astro.props;
 const abs = (p: string) => (Astro.site ? new URL(p, Astro.site).href : p);
@@ -8,15 +8,16 @@ const first = oldest(s)[0];
 const newest = latest(s)[0];
 const langNames = s.langs.map((l) => LANG_LABEL[l] ?? l).join(' & ');
 const jsonLd = {
-  '@context': 'https://schema.org', '@type': 'ComicSeries', name: s.title, description: s.synopsis, genre: s.genres, inLanguage: s.langs,
+  '@context': 'https://schema.org', '@type': 'ComicSeries', name: s.title, ...(s.aliases?.length ? { alternateName: s.aliases } : {}), description: s.synopsis, genre: s.genres, inLanguage: s.langs,
   image: abs(cover(s)), url: abs(seriesUrl(s)), numberOfEpisodes: s.chapters.length,
   startDate: first.date, dateModified: newest.date,
   ...(s.credit ? { creditText: s.credit } : {}),
-  hasPart: oldest(s).map((c) => ({ '@type': 'ComicIssue', name: `${s.title} Chapter ${c.n}: ${c.title}`, issueNumber: c.n, datePublished: c.date, url: abs(readUrl(s, c.n, primaryLang(c))) })),
+  hasPart: oldest(s).map((c) => ({ '@type': 'ComicIssue', name: `${s.title} ${chapterName(c)}`, issueNumber: c.n, datePublished: c.date, url: abs(readUrl(s, c.n, primaryLang(c))) })),
 };
-const description = `${s.synopsis.split('. ')[0].replace(/\.$/, '')}. Read all ${s.chapters.length} chapters of ${s.title} free online in ${langNames}.`;
+const alt = altNames(s);
+const description = `${s.synopsis.split('. ')[0].replace(/\.$/, '')}. Read ${s.chapters.length} chapters of ${baseName(s)}${alt ? ` (${alt})` : ''} free online in ${langNames}, mobile friendly.`;
 ---
-<Layout title={`${s.title} - Read Online in ${langNames} | ${SITE_NAME}`} description={description} image={cover(s)} imageAlt={`${s.title} cover`} type="website" jsonLd={jsonLd} crumbs={[{ name: s.title, href: seriesUrl(s) }]}>
+<Layout title={`${baseName(s)}${alt ? ` (${alt})` : ''} - Read Online in ${langNames} | ${SITE_NAME}`} description={description} image={cover(s)} imageAlt={`${s.title} cover`} type="website" jsonLd={jsonLd} crumbs={[{ name: s.title, href: seriesUrl(s) }]}>
   <div class="head card">
     <div class="head-bg" style={`background-image:url(${cover(s)})`}></div>
     <img class="cover" src={cover(s)} alt={`${s.title} cover`} width="220" height="308" fetchpriority="high" />
@@ -44,7 +45,7 @@ const description = `${s.synopsis.split('. ')[0].replace(/\.$/, '')}. Read all $
     <ul class="chs">
       {latest(s).map((c) => (
         <li>
-          <a class="main" href={readUrl(s, c.n, primaryLang(c))}><span class="cn">Chapter {c.n}</span><span class="ct">{c.title}</span><time datetime={c.date}>{c.date}</time></a>
+          <a class="main" href={readUrl(s, c.n, primaryLang(c))}><span class="cn">Chapter {c.n}</span>{!/^Chapter \d+$/i.test(c.title) && <span class="ct">{c.title}</span>}<time datetime={c.date}>{c.date}</time></a>
           <span class="langs">
             {Object.keys(c.langs).map((l) => <a class="pill" href={readUrl(s, c.n, l)} hreflang={hreflang(l)} aria-label={`Chapter ${c.n} in ${LANG_LABEL[l] ?? l}`}>{LANG_LABEL[l] ?? l}</a>)}
           </span>

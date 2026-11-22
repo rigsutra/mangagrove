@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { allSeries, cover, latest, seriesUrl, u, SITE_NAME } from '../lib/url';
 const genres = [...new Set(allSeries.flatMap((s) => s.genres))].sort();
 ---
-<Layout title={`Browse All Comics - ${SITE_NAME}`} description={`Browse every comic on ${SITE_NAME}: ${genres.join(', ')} and more, free to read in English and Hindi.`} active="browse" crumbs={[{ name: 'Browse', href: u('/browse/') }]}>
+<Layout title={`Browse All Comics - ${SITE_NAME}`} description={`Browse every comic on ${SITE_NAME}: ${genres.join(', ')} and more, free to read in Hinglish, Hindi and English.`} active="browse" crumbs={[{ name: 'Browse', href: u('/browse/') }]}>
   <section class="card">
     <h1 class="section-title">Browse Comics</h1>
     <div class="tools">
